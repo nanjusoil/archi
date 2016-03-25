@@ -46,7 +46,11 @@ int mapopcode();
 iImageInit(unsigned char *,int );
 dImageInit(unsigned char *,int );
 int getfuct();
+int getrs();
+int gettr();
+int getrd();
 int main()
+
 {
     FILE *iImg , *dImg;
    unsigned char* iImgbuf, *dImgbuf;
@@ -54,6 +58,10 @@ int main()
     int iImgLen , dImgLen;
     int opcode;
     int fuct;
+    int rs;
+    int rt;
+    int rd;
+
     iImg = fopen("iimage.bin", "rb");
     dImg = fopen("dimage.bin", "rb");
     fseek(iImg, 0, SEEK_END);
@@ -86,7 +94,10 @@ int main()
     switch(opcode){
         case RTYPE:
             fuct =getfuct();
-            printf("%d ",fuct);
+            rs=getrs();
+            rt=getrt();
+            rd=getrd();
+            printf("%d %d %x %d ",fuct ,rs,rt ,rd);
             switch(fuct)
             {
             case add:
@@ -235,8 +246,32 @@ int getfuct()
 int mapopcode()
 {
     unsigned int temp1;
+    temp1=0;
     temp1 = iMemory[PC];
     temp1 = (temp1>>2);
     //printf("%d" ,temp1);
     return temp1;
+}
+int getrs()
+{
+int temp1,temp2=0;
+temp1=iMemory[PC];
+temp2=iMemory[PC+1];
+temp1=(temp1<<30>>27);
+temp2=(temp2>>5);
+return temp1+temp2;
+}
+int getrt()
+{
+int temp1,temp2=0;
+temp1=iMemory[PC+1];
+temp1=((temp1<<27)>>27);
+return temp1;
+}
+int getrd()
+{
+int temp1,temp2=0;
+temp1=iMemory[PC+2];
+temp1=temp1>>3;
+return temp1;
 }
