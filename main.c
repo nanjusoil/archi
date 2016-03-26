@@ -27,7 +27,6 @@
 #define lui 15
 #define andi 12
 #define ori 13
-#define lhu 37
 #define nori 14
 #define slti 10
 #define beq 4
@@ -37,14 +36,16 @@
 #define jal 3
 #define halt 63
 
-unsigned char iMemory[1024];
-unsigned char dMemory[1024];
+char iMemory[1024];
+char dMemory[1024];
 int PC;
 int reg[32];
+int cycle = 0;
 
 int mapopcode();
-iImageInit(unsigned char *,int );
-dImageInit(unsigned char *,int );
+void printreg(FILE* );
+iImageInit( char *,int );
+dImageInit( char *,int );
 int getfuct();
 int getrs();
 int gettr();
@@ -52,7 +53,7 @@ int getrd();
 int main()
 
 {
-    FILE *iImg , *dImg;
+    FILE *iImg , *dImg , *output;
    unsigned char* iImgbuf, *dImgbuf;
     int i = 0;
     int iImgLen , dImgLen;
@@ -61,9 +62,13 @@ int main()
     int rs;
     int rt;
     int rd;
-
+    int immd;
+    int temp5;
+    int temp6;
     iImg = fopen("iimage.bin", "rb");
     dImg = fopen("dimage.bin", "rb");
+    output = fopen("snapshot.rpt", "wb");
+
     fseek(iImg, 0, SEEK_END);
     fseek(dImg, 0, SEEK_END);
     dImgLen = ftell(dImg);
@@ -91,13 +96,15 @@ int main()
     dImageInit(dImgbuf , dImgLen );
    while(1){
     opcode =mapopcode();
+    printreg(output);
+    rs=getrs();
+    rt=getrt();
+    rd=getrd();
+    immd=getimmd();
+   // printf("%d %x %d ",rs,rt ,rd);
     switch(opcode){
         case RTYPE:
             fuct =getfuct();
-            rs=getrs();
-            rt=getrt();
-            rd=getrd();
-            printf("%d %d %x %d ",fuct ,rs,rt ,rd);
             switch(fuct)
             {
             case add:
@@ -125,6 +132,10 @@ int main()
                 printf("nand");
                 break;
                 case slt:
+                if(reg[rs]<reg[rt])
+                    reg[rd]=1;
+                else
+                    reg[rd]=0;
                 printf("slt");
                 break;
                 case sll:
@@ -142,7 +153,15 @@ int main()
 
 
             }
-
+        break;
+        case lhu:
+        temp5=0;
+        temp6=0;
+        temp5= dMemory[reg[rs]];
+        temp6= dMemory[reg[rs]+1];
+        temp5= temp5<<8;
+        reg[rt]=temp5+temp6;
+        printf("lhu\n");
         break;
         case addi:
         printf("addi\n");
@@ -154,13 +173,22 @@ int main()
         printf("lw\n");
         break;
         case lh:
+        temp5=0;
+        temp6=0;
+        temp5= dMemory[reg[rs]];
+        temp6= dMemory[reg[rs]+1];
+        temp5= temp5<<8;
+        reg[rt]=temp5+temp6;
         printf("lh\n");
         break;
         case lb:
-        printf("lb\n");
+        reg[rt]=dMemory[immd];
+        printf("lb %x",reg[rt]);
         break;
         case lbu:
-        printf("lbu\n");
+        reg[rt]=dMemory[rs+immd];
+        reg[rt]<<24>>24;
+        printf("lbu %x",reg[rt]);
         break;
         case sw:
         printf("sw\n");
@@ -178,6 +206,8 @@ int main()
         printf("andi\n");
         break;
         case ori:
+            immd=getimmd();
+        reg[rt]=reg[rs]|immd;
         printf("ori\n");
         break;
         case nori:
@@ -187,10 +217,14 @@ int main()
         printf("slti\n");
         break;
         case beq:
+        if(reg[rs]==reg[rt])
+            PC=PC+4*immd;
         printf("beq\n");
         break;
         case bne:
-        printf("bne\n");
+        if(reg[rs]!=reg[rt])
+            PC = PC+4*immd;
+            printf("bne\n");
         break;
         case bgtz:
         printf("bgtz\n");
@@ -212,28 +246,30 @@ int main()
 
 
 }
-iImageInit(unsigned char * iImgbuf ,int iImgLen)
+iImageInit(char * iImgbuf ,int iImgLen)
 {
     int i =0;
     int addr;
     for(i=0;i<4;i++)
-     PC= (PC<<8) + iImgbuf[i];
+     PC= (PC<<8) + (unsigned char)iImgbuf[i];
   //  printf("%x",PC);
     addr=PC;
  //   printf("%d",addr);
     for(i=8;i<iImgLen;i++)
-    iMemory[addr++]= iImgbuf[i];
+    iMemory[addr++]= (unsigned char)iImgbuf[i];
 }
-dImageInit(unsigned char *dImgbuf , int dImgLen )
+dImageInit(char *dImgbuf , int dImgLen )
 {
     int i =0;
     int temp;
     int addr=0;
     for(i=0;i<4;i++)
-     temp= (temp<<8) + dImgbuf[i];
+     temp= (temp<<8) + (unsigned char)dImgbuf[i];
     reg [29] =temp;
     for(i=8;i<dImgLen;i++)
-    dMemory[addr++]= dImgbuf[i];
+    dMemory[addr++]= (unsigned char)dImgbuf[i];
+    for(i=0 ; i<1024;i++)
+        printf("%x " ,dMemory[i]);
 
 }
 int getfuct()
@@ -248,7 +284,7 @@ int mapopcode()
     unsigned int temp1;
     temp1=0;
     temp1 = iMemory[PC];
-    temp1 = (temp1>>2);
+    temp1 = (temp1<<24>>2>>24);
     //printf("%d" ,temp1);
     return temp1;
 }
@@ -275,3 +311,24 @@ temp1=iMemory[PC+2];
 temp1=temp1>>3;
 return temp1;
 }
+void printreg(FILE* output)
+{
+    fprintf(output,"cycle %d\n", cycle++);
+    int i;
+    for (i = 0; i < 32; ++i) {
+        fprintf(output, "$%02u: 0x", i);
+        fprintf(output, "%08X\n", reg[i]);
+    }
+    fprintf(output, "PC: 0x");
+    fprintf(output, "%08X\n\n\n", PC);
+}
+
+int getimmd()
+{
+int temp1,temp2=0;
+temp1=iMemory[PC+2];
+temp2=iMemory[PC+3];
+temp1= temp1<<8;
+return temp1+temp2;
+}
+
