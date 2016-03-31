@@ -215,7 +215,7 @@ return (unsigned char)temp1+temp2;
 }
 int main()
 {
-    FILE *iImg , *dImg , *output;
+    FILE *iImg , *dImg , *output,*error;
     char* iImgbuf, *dImgbuf;
     int i = 0;
     int iImgLen , dImgLen;
@@ -229,6 +229,7 @@ int main()
     iImg = fopen("iimage.bin", "rb");
     dImg = fopen("dimage.bin", "rb");
     output = fopen("snapshot.rpt", "wb");
+    error = fopen("error.rpt", "wb");
 
     fseek(iImg, 0, SEEK_END);
     fseek(dImg, 0, SEEK_END);
@@ -404,6 +405,14 @@ int main()
         printf("nori\n");
         break;
         case slti:
+        immd = sim->getsignimmd();
+        if(immd>sim->getreg(rs))
+        {
+            sim->setreg(rt , 1);
+        }
+        else{
+            sim->setreg(rt , 0);
+        }
         printf("slti\n");
         break;
         case beq:
@@ -425,6 +434,17 @@ int main()
         printf("bgtz\n");
         break;
         case j:
+        temp1 = sim->getiMemory(0);
+        temp2 = sim->getiMemory(1);
+        temp3 = sim->getiMemory(2);
+        temp4 = sim->getiMemory(3);
+        temp1 = temp1 << 30 >> 6;
+        temp2 = temp2 << 24 >> 8;
+        temp3 = temp3 << 24 >> 16;
+        temp4 = temp4 << 24 >> 24;
+        temp5 = temp1 + temp2 + temp3 + temp4;
+        sim->setPC((sim->getPC()+4)>> 28 << 28| (temp5 << 2));
+        sim->setPC((sim->getPC()-4));
         printf("j\n");
         break;
         case jal:
