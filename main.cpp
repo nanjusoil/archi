@@ -57,7 +57,8 @@ public :
     unsigned char  getrt();
     unsigned char  getrd();
     unsigned char getimmd();
-    int getdMemory(int);
+    char getdMemory(int);
+    char getiMemory(int);
     void setunsigndMemory(int  , int);
     void setMemory(int , int);
     int getunsigndMemory(int);
@@ -67,7 +68,11 @@ public :
     simulator(char * ,char * , int ,int);
     ~simulator();
 };
-int simulator::getdMemory(int index)
+char simulator::getiMemory(int index)
+{
+    return iMemory[PC+index];
+}
+char simulator::getdMemory(int index)
 {
     int temp=dMemory[index];
     for(int i=0;i<1024;i++)
@@ -180,6 +185,9 @@ return temp1;
 }
 void simulator::printreg(FILE* output)
 {
+        for(int i=0;i<1024;i++)
+        printf("%x", dMemory[i]);
+        printf("\n");
     fprintf(output,"cycle %d\n", cycle++);
     int i;
     for (i = 0; i < 32; ++i) {
@@ -217,8 +225,7 @@ int main()
     int rt;
     int rd;
     int immd;
-    int temp5;
-    int temp6;
+    unsigned int temp5 ,temp1, temp2 ,temp6,temp3,temp4;
     iImg = fopen("iimage.bin", "rb");
     dImg = fopen("dimage.bin", "rb");
     output = fopen("snapshot.rpt", "wb");
@@ -320,18 +327,28 @@ int main()
         printf("addiu\n");
         break;
         case lw:
+        immd=sim->getsignimmd();
+        temp1 = sim->getdMemory(sim->getreg(rs)+immd), temp1 = temp1 << 24;
+        temp2 = sim->getdMemory(sim->getreg(rs)+immd+1), temp2 = temp2 << 24 >> 8;
+        temp5 = sim->getdMemory(sim->getreg(rs)+immd+2), temp5 = temp5 << 24 >> 16;
+        temp6 = sim->getdMemory(sim->getreg(rs)+immd+3), temp6 = temp6 << 24 >> 24;
+        sim->setreg(rt ,temp1 + temp2 + temp5 + temp6 );
         printf("lw\n");
         break;
         case lh:
         temp5=0;
         temp6=0;
         immd=sim->getsignimmd();
+        printf("%x", sim->getreg(rs)+immd);
+        printf("%d", sim->getdMemory(sim->getreg(rs)+immd));
         temp5=  sim->getdMemory(sim->getreg(rs)+immd);
         temp6=  sim->getdMemory(sim->getreg(rs)+1+immd);
-        temp5= temp5<<8;
+        temp5= temp5<<24>>16;
+        temp6 = temp6<<24>>24;
         printf("\n %x\n" ,temp5);
         printf("\n %x\n" ,temp6);
-        sim->setreg(rt,temp5+temp6);
+        sim->setreg(rt,(short)(temp5+temp6));
+        printf("%x",(short)(temp5+temp6));
         printf("lh\n");
         break;
         case lb:
@@ -350,9 +367,9 @@ int main()
         case sh:
             immd=sim->getsignimmd();
             temp5=sim->getreg(rt)>>8;
-            printf("sh %x" , sim->getreg(rt)>>8 & 0x0000FFFF);
+            printf("sh %x" , sim->getreg(rt) & 0x0000FFFF);
          sim->setMemory(rs+immd,sim->getreg(rt)<<16>>24);
-         sim->setMemory(rs+immd+1,sim->getreg(rt<<24>>24));
+         sim->setMemory(rs+immd+1,sim->getreg(rt)<<24>>24);
         printf("sh\n");
         break;
         case sb:
@@ -398,7 +415,18 @@ int main()
         printf("j\n");
         break;
         case jal:
-        printf("jal\n");
+        sim->setreg(31 , sim->getPC()+4);
+        temp1 = sim->getiMemory(0);
+        temp2 = sim->getiMemory(1);
+        temp3 = sim->getiMemory(2);
+        temp4 = sim->getiMemory(3);
+        temp1 = temp1 << 30 >> 6;
+        temp2 = temp2 << 24 >> 8;
+        temp3 = temp3 << 24 >> 16;
+        temp4 = temp4 << 24 >> 24;
+        temp5 = temp1 + temp2 + temp3 + temp4;
+        sim->setPC((sim->getPC()+4)>> 28 << 28| (temp5 << 2));
+        sim->setPC((sim->getPC()-4));
         break;
         case halt:
        exit(0);
