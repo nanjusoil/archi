@@ -371,7 +371,11 @@ int main()
         printf("lbu %x",sim->getreg(rt));
         break;
         case sw:
-        
+        immd=sim->getsignimmd();
+        sim->setMemory(sim->getreg(rs)+immd , sim->getreg(rt)>> 24);
+        sim->setMemory(sim->getreg(rs)+immd +1 , sim->getreg(rt)<< 8 >> 24);
+        sim->setMemory(sim->getreg(rs)+immd +2, sim->getreg(rt)<< 16 >> 24);
+        sim->setMemory(sim->getreg(rs)+immd +3, sim->getreg(rt)<< 24 >> 24);
         break;
         case sh:
             immd=sim->getsignimmd();
