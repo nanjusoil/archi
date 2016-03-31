@@ -207,11 +207,10 @@ return temp1+temp2;
 }
 unsigned char simulator::getimmd()
 {
-int temp1,temp2=0;
-temp1=iMemory[PC+2];
-temp2=iMemory[PC+3];
-temp1= temp1<<8;
-return (unsigned char)temp1+temp2;
+    int temp1,temp2=0;
+temp1=iMemory[PC+2]<< 24 >> 16;
+temp2=iMemory[PC+3] << 24 >> 24;
+return temp1+temp2;
 }
 int main()
 {
@@ -220,7 +219,7 @@ int main()
     int i = 0;
     int iImgLen , dImgLen;
     int opcode;
-    int fuct;
+    unsigned int fuct;
     int rs;
     int rt;
     int rd;
@@ -258,6 +257,7 @@ int main()
     switch(opcode){
         case RTYPE:
             fuct =sim->getfuct();
+            fuct = fuct<<26>>26;
             switch(fuct)
             {
             case add:
@@ -393,15 +393,15 @@ int main()
         printf("lui\n");
         break;
         case andi:
+        sim->setreg(rt , sim->getreg(rs)&immd);
         printf("andi\n");
         break;
         case ori:
-            immd=immd;
-            temp5=sim->getreg(rs);
         sim->setreg(rt,sim->getreg(rs)|immd);
         printf("ori\n");
         break;
         case nori:
+        sim->setreg(rt , ~(sim->getreg(rs)|immd));
         printf("nori\n");
         break;
         case slti:
