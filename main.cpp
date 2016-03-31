@@ -310,7 +310,7 @@ int main()
                 printf("sra");
                 break;
                 case jr:
-                printf("jr");
+                sim->setPC(sim->getreg(rs)-4);
                 break;
 
 
@@ -340,6 +340,7 @@ int main()
         temp2 = sim->getdMemory(sim->getreg(rs)+immd+1), temp2 = temp2 << 24 >> 8;
         temp5 = sim->getdMemory(sim->getreg(rs)+immd+2), temp5 = temp5 << 24 >> 16;
         temp6 = sim->getdMemory(sim->getreg(rs)+immd+3), temp6 = temp6 << 24 >> 24;
+        printf("%x", temp1 + temp2 + temp5 + temp6 );
         sim->setreg(rt ,temp1 + temp2 + temp5 + temp6 );
         printf("lw\n");
         break;
@@ -370,7 +371,7 @@ int main()
         printf("lbu %x",sim->getreg(rt));
         break;
         case sw:
-        printf("sw\n");
+        
         break;
         case sh:
             immd=sim->getsignimmd();
