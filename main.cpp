@@ -260,27 +260,35 @@ int main()
             switch(fuct)
             {
             case add:
+                sim->setreg(rd, sim->getreg(rs)+sim->getreg(rt));
                 printf("add");
                 break;
                 case addu:
+                sim->setreg(rd, sim->getreg(rs)+sim->getreg(rt));
                 printf("addu");
                 break;
                 case sub:
+                sim->setreg(rd, sim->getreg(rs)-sim->getreg(rt));
                 printf("sub");
                 break;
                 case _and:
+                sim->setreg(rd, sim->getreg(rs)&sim->getreg(rt));
                 printf("_and");
                 break;
                 case _or:
+                sim->setreg(rd, sim->getreg(rs)|sim->getreg(rt));
                 printf("_or");
                 break;
                 case _xor:
+                sim->setreg(rd, sim->getreg(rs)^sim->getreg(rt));
                 printf("_xor");
                 break;
                 case nor:
+                sim->setreg(rd, ~(sim->getreg(rs)|sim->getreg(rt)));
                 printf("nor");
                 break;
                 case nand:
+                sim->setreg(rd, ~(sim->getreg(rs)&sim->getreg(rt)));
                 printf("nand");
                 break;
                 case slt:
