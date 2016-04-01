@@ -84,10 +84,12 @@ void simulator::printerror(FILE* error)
     if (memoryoverflow) {
         memoryoverflow = 0;
         fprintf(error, "In cycle %d: Address Overflow\n", cycle);
+        if(!datamisalign)exit(0);
     }
     if (datamisalign) {
         datamisalign = 0;
         fprintf(error, "In cycle %d: Misalignment Error\n", cycle);
+        exit(0);
     }
 }
 unsigned int simulator::getshift()
@@ -259,7 +261,7 @@ int main()
     int rt;
     int rd;
     int immd;
-    int temp0;
+    int temp0 , temp_1 ,temp_2;
     unsigned int temp5 ,temp1, temp2 ,temp6,temp3,temp4;
     iImg = fopen("iimage.bin", "rb");
     dImg = fopen("dimage.bin", "rb");
@@ -294,13 +296,23 @@ int main()
         case RTYPE:
             fuct =sim->getfuct();
             fuct = fuct<<26>>26;
-            if (rd == 0) {
-           sim->writetozero = 1;
-            }
             switch(fuct)
             {
             case add:
                 sim->setreg(rd, sim->getreg(rs)+sim->getreg(rt));
+                temp1=sim->getreg(rs);
+                temp2 = sim->getreg(rt);
+               temp0 = temp1+temp2;
+               temp_1 = sim->getreg(rs);
+               temp_2 = sim->getreg(rt);
+                if(sim->getreg(rs)>0&&sim->getreg(rt)>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if (sim->getreg(rs)<0&&sim->getreg(rt)<0&&temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
                 //printf("add");
                 break;
                 case addu:
@@ -309,6 +321,15 @@ int main()
                 break;
                 case sub:
                 sim->setreg(rd, sim->getreg(rs)-sim->getreg(rt));
+                temp0 = sim->getreg(rs)-sim->getreg(rt);
+                if(sim->getreg(rs)>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if (sim->getreg(rs)<0&&temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
                 //printf("sub");
                 break;
                 case _and:
@@ -362,51 +383,94 @@ int main()
 
 
             }
+        if (rd == 0&&opcode!=jr) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         break;
         case lhu:
         temp5=0;
         temp6=0;
-                    if (rt == 0) {
-           sim->writetozero = 1;
-            }
-        temp5= sim->getunsigndMemory(sim->getreg(rs));
-        temp6= sim->getunsigndMemory(sim->getreg(rs)+1);
+        immd=sim->getsignimmd();
+        temp5= sim->getunsigndMemory(sim->getreg(rs)+immd);
+        temp6= sim->getunsigndMemory(sim->getreg(rs)+1+immd);
         temp5= temp5<<8;
         sim->setreg(rt,temp5+temp6);
+        temp0 = temp5+temp6;
+            if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if (sim->getreg(rs)<0&&temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
+            if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
+            temp0 = sim->getreg(rs)+1+immd;
+            if(sim->getreg(rs)+1+immd>1024||temp0<0)
+            sim->memoryoverflow = 1;
+            if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
         //printf("lhu\n");
         break;
         case addi:
             immd=sim->getsignimmd();
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
             //printf("%x\n" , sim->getreg(rs));
         sim->setreg(rt,sim->getreg(rs)+immd);
+        temp0 = sim->getreg(rs)+immd;
+        if(sim->getreg(rs)>0&&sim->getsignimmd()>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if (sim->getreg(rs)<0&&sim->getsignimmd()<0&&temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
+                            if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         break;
         case addiu:
-            if (rt == 0) {
-           sim->writetozero = 1;
-            }
             sim->setreg(rt,sim->getreg(rs)+immd);
+                        if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         //printf("addiu\n");
         break;
         case lw:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
         immd=sim->getsignimmd();
         temp1 = sim->getdMemory(sim->getreg(rs)+immd), temp1 = temp1 << 24;
         temp2 = sim->getdMemory(sim->getreg(rs)+immd+1), temp2 = temp2 << 24 >> 8;
         temp5 = sim->getdMemory(sim->getreg(rs)+immd+2), temp5 = temp5 << 24 >> 16;
         temp6 = sim->getdMemory(sim->getreg(rs)+immd+3), temp6 = temp6 << 24 >> 24;
-        //printf("%x", temp1 + temp2 + temp5 + temp6 );
+        printf("%x", temp1 + temp2 + temp5 + temp6 );
         sim->setreg(rt ,temp1 + temp2 + temp5 + temp6 );
+                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
+            temp0 = temp1 + temp2 + temp5 + temp6;
+                if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if (sim->getreg(rs)<0&&immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
+                temp0 = sim->getreg(rs)+3+immd;
+                if(sim->getreg(rs)+3+immd>1024||temp0<0)
+            sim->memoryoverflow = 1;
+                if((sim->getreg(rs)+immd)%4!=0)
+            sim->datamisalign = 1;
         //printf("lw\n");
         break;
         case lh:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
         temp5=0;
         temp6=0;
         immd=sim->getsignimmd();
@@ -419,23 +483,66 @@ int main()
         //printf("\n %x\n" ,temp5);
         //printf("\n %x\n" ,temp6);
         sim->setreg(rt,(short)(temp5+temp6));
+                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
+            temp0 = temp5 + temp6;
+            if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if (sim->getreg(rs)<0&&immd<0&& temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
+                temp0 = sim->getreg(rs)+1+immd;
+            if(sim->getreg(rs)+1+immd>1024 || temp0<0)
+            sim->memoryoverflow = 1;
+            if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
         //printf("%x",(short)(temp5+temp6));
         //printf("lh\n");
         break;
         case lb:
-                        if (rt == 0) {
+            immd=sim->getsignimmd();
+        sim->setreg(rt, sim->getdMemory(immd+sim->getreg(rs)));
+                    if (rt == 0) {
            sim->writetozero = 1;
+           sim->setreg(rt,0);
             }
-        sim->setreg(rt, sim->getdMemory(immd));
+            temp0 = immd+sim->getreg(rs);
+            if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+                else if(sim->getreg(rs)<0&&immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
+        if(sim->getreg(rs)+immd>1024 || temp0 < 0)
+            sim->memoryoverflow = 1;
         //printf("lb %x",sim->getreg(rt));
         break;
         case lbu:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
-        sim->setreg(rt, sim->getunsigndMemory(rs+immd));
+        sim->setreg(rt, sim->getunsigndMemory(sim->getreg(rs)+immd));
+        temp0 = sim->getreg(rs)+immd;
+        if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+        else if(sim->getreg(rs)<0&&immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+        else
+                {
+
+                }
         sim->lsreg(rt,24);
         sim->rsreg(rt,24);
+            if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
+            if(sim->getreg(rs)+immd>1024||temp0<0)
+            sim->memoryoverflow = 1;
         //printf("lbu %x",sim->getreg(rt));
         break;
         case sw:
@@ -445,6 +552,19 @@ int main()
         sim->setMemory(sim->getreg(rs)+immd +1 , sim->getreg(rt)<< 8 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +2, sim->getreg(rt)<< 16 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +3, sim->getreg(rt)<< 24 >> 24);
+        temp0 = sim->getreg(rs)+immd;
+                if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+        else if(sim->getreg(rs)<0&&immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+        else
+                {
+
+                }
+        if(sim->getreg(rs)+3+immd>1024||temp0<0)
+            sim->memoryoverflow = 1;
+        if((sim->getreg(rs)+immd)%4!=0)
+            sim->datamisalign = 1;
         break;
         case sh:
             immd=sim->getsignimmd();
@@ -452,43 +572,62 @@ int main()
             //printf("sh %x" , sim->getreg(rt) & 0x0000FFFF);
          sim->setMemory(rs+immd,sim->getreg(rt)<<16>>24);
          sim->setMemory(rs+immd+1,sim->getreg(rt)<<24>>24);
+         temp0 = sim->getreg(rs)+immd;
+                 if(sim->getreg(rs)>0&&immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+        else if(sim->getreg(rs)<0&&immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+        else
+                {
+
+                }
+        if(sim->getreg(rs)+1+immd>1024||temp0<0)
+            sim->memoryoverflow = 1;
         //printf("sh\n");
         break;
         case sb:
+            temp0 =sim->getreg(rs)+1+immd;
+        if(sim->getreg(rs)+1+immd>1024||temp0<0)
+            sim->memoryoverflow = 1;
         //printf("sb\n");
         break;
         case lui:
             if (rt == 0) {
            sim->writetozero = 1;
+           sim->setreg(rt,0);
             }
         //printf("lui\n");
         break;
         case andi:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
         sim->setreg(rt , sim->getreg(rs)&immd);
+                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         //printf("andi\n");
         break;
         case ori:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
         sim->setreg(rt,sim->getreg(rs)|immd);
+                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         //printf("ori\n");
         break;
         case nori:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
         sim->setreg(rt , ~(sim->getreg(rs)|immd));
+                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         //printf("nori\n");
         break;
         case slti:
-                        if (rt == 0) {
-           sim->writetozero = 1;
-            }
         immd = sim->getsignimmd();
+                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         if(immd>sim->getreg(rs))
         {
             sim->setreg(rt , 1);
@@ -496,12 +635,22 @@ int main()
         else{
             sim->setreg(rt , 0);
         }
+
         //printf("slti\n");
         break;
         case beq:
             immd=sim->getsignimmd();
         if(sim->getreg(rs)==sim->getreg(rt))
             sim->setPC( sim->getPC() +4*immd );
+            temp0 = sim->getPC() +4*immd;
+        if(sim->getPC()>0&&4*immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+        else if(sim->getPC()<0&&4*immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+        else
+                {
+
+                }
         //printf("beq\n");
         break;
         case bne:
@@ -511,6 +660,15 @@ int main()
             //printf("%d\n", sim->getPC());
         if(sim->getreg(rs)!=sim->getreg(rt))
             sim->setPC( sim->getPC() +4*immd );
+            temp0 = sim->getPC() +4*immd;
+        if(sim->getPC()>0&&4*immd>0&&temp0<0)
+                    sim->numberoverflow=1;
+        else if(sim->getPC()<0&&4*immd<0&&temp0>0)
+                    sim->numberoverflow=1;
+        else
+                {
+
+                }
                         //printf("%d\n", sim->getPC());
             //printf("bne\n");
         break;
