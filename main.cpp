@@ -58,7 +58,7 @@ public :
     unsigned char  getrs();
     unsigned char  getrt();
     unsigned char  getrd();
-    unsigned char getimmd();
+    unsigned getimmd();
     unsigned int getshift();
     char getdMemory(int);
     char getiMemory(int);
@@ -67,7 +67,7 @@ public :
     int getunsigndMemory(int);
     void setPC( int);
     int getPC();
-    char getsignimmd();
+   unsigned getsignimmd();
     simulator(char * ,char * , int ,int);
     ~simulator();
 };
@@ -231,19 +231,25 @@ void simulator::printreg(FILE* output)
     fprintf(output, "PC: 0x");
     fprintf(output, "%08X\n\n\n", PC);
 }
-char simulator::getsignimmd()
+unsigned simulator::getsignimmd()
 {
-int temp1,temp2=0;
+unsigned temp1,temp2=0;
 temp1=iMemory[PC+2];
 temp2=iMemory[PC+3];
-temp1= temp1<<8;
-return temp1+temp2;
+temp1= temp1<<24>>16;
+temp2= temp2<<24>>24;
+int temp0 =  temp1+temp2;
+temp0 = temp0<<16 >>16;
+return temp0;
 }
-unsigned char simulator::getimmd()
+unsigned simulator::getimmd()
 {
-    int temp1,temp2=0;
-temp1=iMemory[PC+2]<< 24 >> 16;
-temp2=iMemory[PC+3] << 24 >> 24;
+unsigned temp1,temp2=0;
+
+temp1=iMemory[PC+2];
+temp2=iMemory[PC+3] ;
+temp1=temp1<< 24 >> 16;
+temp2=temp2<< 24 >> 24;
 return temp1+temp2;
 }
 int main()
@@ -258,7 +264,8 @@ int main()
     int rs;
     int rt;
     int rd;
-    int immd;
+    int temp_1;
+    unsigned int immd;
     int temp0;
     unsigned int temp5 ,temp1, temp2 ,temp6,temp3,temp4;
     iImg = fopen("iimage.bin", "rb");
@@ -294,6 +301,9 @@ int main()
         case RTYPE:
             fuct =sim->getfuct();
             fuct = fuct<<26>>26;
+            if (rd == 0) {
+           sim->writetozero = 1;
+            }
             switch(fuct)
             {
             case add:
@@ -329,9 +339,9 @@ int main()
                 //printf("nand");
                 break;
                 case slt:
-                    temp5=sim->getreg(rs);
-                    temp6=sim->getreg(rt);
-                if(sim->getreg(rs)<sim->getreg(rt))
+                    temp0=sim->getreg(rs);
+                    temp_1=sim->getreg(rt);
+                if(temp0<temp_1)
                     sim->setreg(rd,1);
                 else
                     sim->setreg(rd,0);
@@ -359,42 +369,40 @@ int main()
 
 
             }
-            if (rd == 0&&opcode!=jr) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
         break;
         case lhu:
         temp5=0;
         temp6=0;
+                    if (rt == 0) {
+           sim->writetozero = 1;
+            }
         temp5= sim->getunsigndMemory(sim->getreg(rs));
         temp6= sim->getunsigndMemory(sim->getreg(rs)+1);
         temp5= temp5<<8;
         sim->setreg(rt,temp5+temp6);
-                    if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
+        if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
         //printf("lhu\n");
         break;
         case addi:
             immd=sim->getsignimmd();
-            //printf("%x\n" , sim->getreg(rs));
-        sim->setreg(rt,sim->getreg(rs)+immd);
-                    if (rt == 0) {
+                        if (rt == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
             }
+            temp0 = sim->getreg(rs)+immd;
+        sim->setreg(rt,temp0);
         break;
         case addiu:
-            sim->setreg(rt,sim->getreg(rs)+immd);
             if (rt == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
             }
+            sim->setreg(rt,sim->getreg(rs)+immd);
         //printf("addiu\n");
         break;
         case lw:
+                        if (rt == 0) {
+           sim->writetozero = 1;
+            }
         immd=sim->getsignimmd();
         temp1 = sim->getdMemory(sim->getreg(rs)+immd), temp1 = temp1 << 24;
         temp2 = sim->getdMemory(sim->getreg(rs)+immd+1), temp2 = temp2 << 24 >> 8;
@@ -402,13 +410,14 @@ int main()
         temp6 = sim->getdMemory(sim->getreg(rs)+immd+3), temp6 = temp6 << 24 >> 24;
         //printf("%x", temp1 + temp2 + temp5 + temp6 );
         sim->setreg(rt ,temp1 + temp2 + temp5 + temp6 );
+        if((sim->getreg(rs)+immd)%4!=0)
+            sim->datamisalign = 1;
         //printf("lw\n");
-                    if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
         break;
         case lh:
+                        if (rt == 0) {
+           sim->writetozero = 1;
+            }
         temp5=0;
         temp6=0;
         immd=sim->getsignimmd();
@@ -421,30 +430,26 @@ int main()
         //printf("\n %x\n" ,temp5);
         //printf("\n %x\n" ,temp6);
         sim->setreg(rt,(short)(temp5+temp6));
-                    if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
         //printf("%x",(short)(temp5+temp6));
         //printf("lh\n");
+    if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
         break;
         case lb:
-        sim->setreg(rt, sim->getdMemory(immd));
-                    if (rt == 0) {
+                        if (rt == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
             }
+        sim->setreg(rt, sim->getdMemory(immd));
         //printf("lb %x",sim->getreg(rt));
         break;
         case lbu:
+                        if (rt == 0) {
+           sim->writetozero = 1;
+            }
         sim->setreg(rt, sim->getunsigndMemory(rs+immd));
         sim->lsreg(rt,24);
         sim->rsreg(rt,24);
         //printf("lbu %x",sim->getreg(rt));
-                    if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
         break;
         case sw:
 
@@ -453,6 +458,8 @@ int main()
         sim->setMemory(sim->getreg(rs)+immd +1 , sim->getreg(rt)<< 8 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +2, sim->getreg(rt)<< 16 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +3, sim->getreg(rt)<< 24 >> 24);
+        if((sim->getreg(rs)+immd)%4!=0)
+            sim->datamisalign = 1;
         break;
         case sh:
             immd=sim->getsignimmd();
@@ -461,53 +468,54 @@ int main()
          sim->setMemory(rs+immd,sim->getreg(rt)<<16>>24);
          sim->setMemory(rs+immd+1,sim->getreg(rt)<<24>>24);
         //printf("sh\n");
+        if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
         break;
         case sb:
         //printf("sb\n");
         break;
         case lui:
+            immd = sim->getimmd();
+            sim->setreg(rt , immd<<16);
             if (rt == 0) {
            sim->writetozero = 1;
             }
         //printf("lui\n");
         break;
         case andi:
-        sim->setreg(rt , sim->getreg(rs)&immd);
-                    if (rt == 0) {
+                        if (rt == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
             }
+        sim->setreg(rt , sim->getreg(rs)&immd);
         //printf("andi\n");
         break;
         case ori:
-        sim->setreg(rt,sim->getreg(rs)|immd);
-                    if (rt == 0) {
+                        if (rt == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
             }
+        sim->setreg(rt,sim->getreg(rs)|immd);
         //printf("ori\n");
         break;
         case nori:
-        sim->setreg(rt , ~(sim->getreg(rs)|immd));
-                    if (rt == 0) {
+                        if (rt == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
             }
+        sim->setreg(rt , ~(sim->getreg(rs)|immd));
         //printf("nori\n");
         break;
         case slti:
-        immd = sim->getsignimmd();
-        if(immd>sim->getreg(rs))
+                        if (rt == 0) {
+           sim->writetozero = 1;
+            }
+        temp0 = sim->getsignimmd();
+       temp_1 =  sim->getreg(rs);
+        if(temp0>temp_1)
         {
             sim->setreg(rt , 1);
         }
         else{
             sim->setreg(rt , 0);
         }
-                    if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
         //printf("slti\n");
         break;
         case beq:
