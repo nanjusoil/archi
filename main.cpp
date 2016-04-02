@@ -406,12 +406,12 @@ int main()
                 //printf("slt");
                 break;
                 case sll:
-                shamt = sim->getshift();
-                sim->setreg(rd , sim->getreg(rt)<<shamt);
-                                    if (rd == 0) {
+            if (rd == 0&&sim->getreg(0)) {
            sim->writetozero = 1;
            sim->setreg(rt,0);
             }
+                shamt = sim->getshift();
+                sim->setreg(rd , sim->getreg(rt)<<shamt);
                 //printf("sll");
                 break;
                 case srl:
