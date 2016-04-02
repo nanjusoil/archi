@@ -42,7 +42,7 @@ class simulator
 private:
     char iMemory[1024];
     char dMemory[1024];
-    int reg[32];
+    unsigned reg[32];
     int PC;
 public :
         int cycle;
@@ -292,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==16)
+                if(sim->cycle==22)
             {
                 printf("asd");
             }
@@ -528,11 +528,14 @@ int main()
             sim->datamisalign = 1;
             break;
         }
-        immd=sim->getsignimmd();
-        temp1 = sim->getdMemory(sim->getreg(rs)+immd), temp1 = temp1 << 24;
-        temp2 = sim->getdMemory(sim->getreg(rs)+immd+1), temp2 = temp2 << 24 >> 8;
-        temp5 = sim->getdMemory(sim->getreg(rs)+immd+2), temp5 = temp5 << 24 >> 16;
-        temp6 = sim->getdMemory(sim->getreg(rs)+immd+3), temp6 = temp6 << 24 >> 24;
+        temp1 = sim->getdMemory(sim->getreg(rs)+immd);
+         temp1 = temp1 << 24;
+        temp2 = sim->getdMemory(sim->getreg(rs)+immd+1);
+         temp2 = temp2 << 24 >> 8;
+        temp5 = sim->getdMemory(sim->getreg(rs)+immd+2);
+         temp5 = temp5 << 24 >> 16;
+        temp6 = sim->getdMemory(sim->getreg(rs)+immd+3);
+         temp6 = temp6 << 24 >> 24;
         //printf("%x", temp1 + temp2 + temp5 + temp6 );
 
                         if(temp_1>0&&temp_2>0&&temp0<0)
@@ -675,8 +678,8 @@ int main()
 
                 }
             //printf("sh %x" , sim->getreg(rt) & 0x0000FFFF);
-         sim->setMemory(rs+immd,sim->getreg(rt)<<16>>24);
-         sim->setMemory(rs+immd+1,sim->getreg(rt)<<24>>24);
+         sim->setMemory(sim->getreg(rs)+immd,sim->getreg(rt)<<16>>24);
+         sim->setMemory(sim->getreg(rs)+immd+1,sim->getreg(rt)<<24>>24);
         //printf("sh\n");
 
         if((sim->getreg(rs)+immd)%2!=0)
@@ -686,9 +689,12 @@ int main()
             sim->memoryoverflow = 1;
         break;
         case sb:
+            immd = sim->getsignimmd();
         temp0 =sim->getreg(rs)+immd;
         if(temp0+1>=1024||temp0<0)
             sim->memoryoverflow = 1;
+            sim->setMemory(temp0 , sim->getreg(rt)<<24>>24);
+
         //printf("sb\n");
         break;
         case lui:
