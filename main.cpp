@@ -456,6 +456,9 @@ int main()
 
                 }
         sim->setreg(rt,temp5+temp6);
+        temp0 = sim->getreg(rs)+immd;
+            if(temp0+1>1024||temp0<0)
+            sim->memoryoverflow = 1;
         if((sim->getreg(rs)+immd)%2!=0)
             sim->datamisalign = 1;
                         if (rt == 0) {
@@ -491,6 +494,7 @@ int main()
            sim->writetozero = 1;
            sim->setreg(rt,0);
             }
+
         //printf("addiu\n");
         break;
         case lw:
@@ -549,6 +553,9 @@ int main()
 
         //printf("%x",(short)(temp5+temp6));
         //printf("lh\n");
+        temp0 = sim->getreg(rs)+immd;
+    if(temp0+1>1024 || temp0<0)
+            sim->memoryoverflow = 1;
     if((sim->getreg(rs)+immd)%2!=0)
             sim->datamisalign = 1;
                         if (rt == 0) {
@@ -570,7 +577,8 @@ int main()
                 }
         sim->setreg(rt, sim->getdMemory(immd));
         //printf("lb %x",sim->getreg(rt));
-
+        if(temp0>1024 || temp0 < 0)
+            sim->memoryoverflow = 1;
                     if (rt == 0) {
            sim->writetozero = 1;
            sim->setreg(rt,0);
@@ -591,6 +599,9 @@ int main()
         sim->setreg(rt, sim->getunsigndMemory(rs+immd));
         sim->lsreg(rt,24);
         sim->rsreg(rt,24);
+            temp0 = temp_1+temp_2;
+            if(temp0>1024||temp0<0)
+            sim->memoryoverflow = 1;
                     if (rt == 0) {
            sim->writetozero = 1;
            sim->setreg(rt,0);
@@ -617,6 +628,9 @@ int main()
         sim->setMemory(sim->getreg(rs)+immd +1 , sim->getreg(rt)<< 8 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +2, sim->getreg(rt)<< 16 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +3, sim->getreg(rt)<< 24 >> 24);
+        temp0 = sim->getreg(rs)+immd;
+        if(temp0+3>1024||temp0<0)
+            sim->memoryoverflow = 1;
         if((sim->getreg(rs)+immd)%4!=0)
             sim->datamisalign = 1;
         break;
@@ -641,8 +655,14 @@ int main()
 
         if((sim->getreg(rs)+immd)%2!=0)
             sim->datamisalign = 1;
+            temp0 = temp_1+temp_2;
+        if(temp0+1>1024||temp0<0)
+            sim->memoryoverflow = 1;
         break;
         case sb:
+        temp0 =sim->getreg(rs)+immd;
+        if(temp0+1>1024||temp0<0)
+            sim->memoryoverflow = 1;
         //printf("sb\n");
         break;
         case lui:
