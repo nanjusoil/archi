@@ -292,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==112)
+                if(sim->cycle==6)
             {
                 printf("asd");
             }
@@ -311,9 +311,9 @@ int main()
                     temp_1 = sim->getreg(rs);
                temp_2 = sim->getreg(rt);
                temp0 = temp_1+temp_2;
-                if(temp_1>0&&temp_2>0&&temp0<0)
+                if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -339,9 +339,9 @@ int main()
            temp_2 =~(sim->getreg(rt)) ;
            temp_2++;
                 temp0 = temp_1+temp_2;
-                if(temp_1>0&&temp_2>0&&temp0<0)
+                if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -454,9 +454,9 @@ int main()
         temp_2 = temp6;
         temp_2 = temp_2<<24>>24;
         temp0 = temp_1+temp_2;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+            if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -481,9 +481,9 @@ int main()
                     temp_1 = sim->getreg(rs);
         temp_2 = immd;
                temp0 = temp_1+temp_2;
-        if(temp_1>0&&temp_2>0&&temp0<0)
+        if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -497,6 +497,7 @@ int main()
             }
         break;
         case addiu:
+            immd = sim->getsignimmd();
             sim->setreg(rt,sim->getreg(rs)+immd);
                         if (rt == 0) {
            sim->writetozero = 1;
@@ -513,9 +514,9 @@ int main()
         if(temp0>=1024||temp0<0)
         {
              sim->memoryoverflow = 1;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+            if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -539,9 +540,9 @@ int main()
          temp6 = temp6 << 24 >> 24;
         //printf("%x", temp1 + temp2 + temp5 + temp6 );
 
-                        if(temp_1>0&&temp_2>0&&temp0<0)
+                        if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -564,6 +565,27 @@ int main()
         immd=sim->getsignimmd();
         //printf("%x", sim->getreg(rs)+immd);
         //printf("%d", sim->getdMemory(sim->getreg(rs)+immd));
+        temp0 = sim->getreg(rs)+immd;
+                    if(sim->getreg(rs)+immd+1>=1024||temp0<0)
+                    {
+                                    sim->memoryoverflow = 1;
+            if(temp5>0&&temp6>0&&temp0<=0)
+                    sim->numberoverflow=1;
+                else if (temp5<0&&temp6<0&& temp0>=0)
+                    sim->numberoverflow=1;
+                else
+                {
+
+                }
+                    if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
+                                                            if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
+            break;
+                    }
+
         temp5=  sim->getdMemory(sim->getreg(rs)+immd);
         temp6=  sim->getdMemory(sim->getreg(rs)+1+immd);
         temp5= temp5<<24>>16;
@@ -571,9 +593,9 @@ int main()
                         temp_1 = sim->getreg(rs);
         temp_2 = immd;
                 temp0 = temp5+temp6;
-            if(temp5>0&&temp6>0&&temp0<0)
+            if(temp5>0&&temp6>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp5<0&&temp6<0&& temp0>0)
+                else if (temp5<0&&temp6<0&& temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -597,9 +619,9 @@ int main()
             temp_1 = sim->getreg(rs);
         temp_2 = immd;
                             temp0 = temp_1+temp_2;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+            if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&& temp0>0)
+                else if (temp_1<0&&temp_2<0&& temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -626,9 +648,9 @@ int main()
                                 temp_1 = sim->getreg(rs);
         temp_2 = immd;
                             temp0 = temp_1+temp_2;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+            if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&& temp0>0)
+                else if (temp_1<0&&temp_2<0&& temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -652,9 +674,9 @@ int main()
                             temp_1 = sim->getreg(rs);
         temp_2 = immd;
                             temp0 = temp_1+temp_2;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+            if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&& temp0>0)
+                else if (temp_1<0&&temp_2<0&& temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
@@ -678,9 +700,9 @@ int main()
                                 temp_1 = sim->getreg(rs);
         temp_2 = immd;
                             temp0 = temp_1+temp_2;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+            if(temp_1>0&&temp_2>0&&temp0<=0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&& temp0>0)
+                else if (temp_1<0&&temp_2<0&& temp0>=0)
                     sim->numberoverflow=1;
                 else
                 {
