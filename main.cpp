@@ -292,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==109)
+                if(sim->cycle==112)
             {
                 printf("asd");
             }
@@ -711,6 +711,7 @@ int main()
             sim->setreg(rt , immd<<16);
             if (rt == 0) {
            sim->writetozero = 1;
+           sim->setreg(0 , 0);
             }
         //printf("lui\n");
         break;
