@@ -509,7 +509,7 @@ int main()
         temp_1 = sim->getreg(rs);
         temp_2 = immd;
         temp0 = temp_1 + temp_2;
-        if(temp0<0)
+        if(temp0>=1024||temp0<0)
         {
              sim->memoryoverflow = 1;
             if(temp_1>0&&temp_2>0&&temp0<0)
