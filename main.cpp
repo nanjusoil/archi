@@ -108,9 +108,6 @@ char simulator::getiMemory(int index)
 char simulator::getdMemory(int index)
 {
     int temp=dMemory[index];
-   /* for(int i=0;i<1024;i++)
-        //printf("%x", dMemory[i]);
-        //printf("\n");*/
     return dMemory[index];
 }
 int simulator::getunsigndMemory(int index)
@@ -295,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==4)
+                if(sim->cycle==316)
             {
                 printf("asd");
             }
@@ -339,20 +336,21 @@ int main()
                 break;
                 case sub:
                                temp_1 =  sim->getreg(rs);
-           temp_2 =(sim->getreg(rt)) ;
-                temp0 = temp_1-temp_2;
-                if(temp_1>=0&&temp_2<=0&&temp0<0)
+           temp_2 =~(sim->getreg(rt)) ;
+           temp_2++;
+                temp0 = temp_1+temp_2;
+                if(temp_1>0&&temp_2>0&&temp0<0)
                     sim->numberoverflow=1;
-                else if (temp_1<=0&&temp_2>=0&&temp0>0)
+                else if (temp_1<0&&temp_2<0&&temp0>0)
                     sim->numberoverflow=1;
                 else
                 {
 
                 }
-                if(temp_2 == -2147483648&&temp_1<0&&temp0>0)
+               /* if(temp_2 == -2147483648&&temp_1<0&&temp0>0)
                      sim->numberoverflow=1;
                 else if(temp_2== -2147483648&&temp_1>0&&temp0<0)
-                     sim->numberoverflow=0;
+                     sim->numberoverflow=0;*/
                 sim->setreg(rd, sim->getreg(rs)-sim->getreg(rt));
                                     if (rd == 0) {
            sim->writetozero = 1;
