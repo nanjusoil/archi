@@ -292,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==22)
+                if(sim->cycle==8)
             {
                 printf("asd");
             }
@@ -593,6 +593,7 @@ int main()
             }
         break;
         case lb:
+            immd = sim->getsignimmd();
             temp_1 = sim->getreg(rs);
         temp_2 = immd;
                             temp0 = temp_1+temp_2;
@@ -604,10 +605,18 @@ int main()
                 {
 
                 }
+            if(temp0>=1024 || temp0 < 0)
+            {
+                            sim->memoryoverflow = 1;
+                                    if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
+            break;
+            }
+
         sim->setreg(rt, sim->getdMemory(sim->getreg(rs)+immd));
         //printf("lb %x",sim->getreg(rt));
-        if(temp0>=1024 || temp0 < 0)
-            sim->memoryoverflow = 1;
                     if (rt == 0) {
            sim->writetozero = 1;
            sim->setreg(rt,0);
