@@ -292,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==8)
+                if(sim->cycle==109)
             {
                 printf("asd");
             }
@@ -374,7 +374,7 @@ int main()
                 sim->setreg(rd, sim->getreg(rs)^sim->getreg(rt));
                                     if (rd == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
+           sim->setreg(rd,0);
             }
                 //printf("_xor");
                 break;
@@ -382,7 +382,7 @@ int main()
                 sim->setreg(rd, ~(sim->getreg(rs)|sim->getreg(rt)));
                                     if (rd == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
+           sim->setreg(rd,0);
             }
                 //printf("nor");
                 break;
@@ -390,7 +390,7 @@ int main()
                 sim->setreg(rd, ~(sim->getreg(rs)&sim->getreg(rt)));
                                     if (rd == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
+           sim->setreg(rd,0);
             }
                 //printf("nand");
                 break;
@@ -422,7 +422,7 @@ int main()
                 sim->setreg(rd , sim->getreg(rt)>>shamt);
                                     if (rd == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
+           sim->setreg(rd,0);
             }
                 //printf("srl");
                 break;
@@ -431,7 +431,7 @@ int main()
                 sim->setreg(rd , (int)sim->getreg(rt)>>shamt);
                                     if (rd == 0) {
            sim->writetozero = 1;
-           sim->setreg(rt,0);
+           sim->setreg(rd,0);
             }
                 //printf("sra");
                 break;
@@ -463,15 +463,16 @@ int main()
 
                 }
         sim->setreg(rt,temp5+temp6);
+                        if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         temp0 = sim->getreg(rs)+immd;
             if(temp0+1>=1024||temp0<0)
             sim->memoryoverflow = 1;
         if((sim->getreg(rs)+immd)%2!=0)
             sim->datamisalign = 1;
-                        if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
+
         //printf("lhu\n");
         break;
         case addi:
@@ -569,17 +570,20 @@ int main()
         temp6 = temp6<<24>>24;
                         temp_1 = sim->getreg(rs);
         temp_2 = immd;
-                temp0 = temp_1+temp_2;
-            if(temp_1>0&&temp_2>0&&temp0<0)
+                temp0 = temp5+temp6;
+            if(temp5>0&&temp6>0&&temp0<0)
                     sim->numberoverflow=1;
-                else if (temp_1<0&&temp_2<0&& temp0>0)
+                else if (temp5<0&&temp6<0&& temp0>0)
                     sim->numberoverflow=1;
                 else
                 {
 
                 }
         sim->setreg(rt,(short)(temp5+temp6));
-
+                        if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+            }
         //printf("%x",(short)(temp5+temp6));
         //printf("lh\n");
         temp0 = sim->getreg(rs)+immd;
@@ -587,10 +591,6 @@ int main()
             sim->memoryoverflow = 1;
     if((sim->getreg(rs)+immd)%2!=0)
             sim->datamisalign = 1;
-                        if (rt == 0) {
-           sim->writetozero = 1;
-           sim->setreg(rt,0);
-            }
         break;
         case lb:
             immd = sim->getsignimmd();
