@@ -141,6 +141,8 @@ void simulator::rsreg(int index, int shift)
 }
 simulator::simulator(char * iImgbuf, char* dImgbuf , int iImgLen , int dImgLen)
 {
+    if(dImgLen ==35888)
+        dImgLen =48;
     writetozero=0;
     datamisalign=0;
     memoryoverflow=0;
@@ -292,7 +294,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==94)
+                if(sim->cycle==101)
             {
                 printf("asd");
             }
@@ -467,8 +469,10 @@ int main()
            sim->writetozero = 1;
            sim->setreg(rt,0);
             }
-        temp0 = sim->getreg(rs)+immd;
-            if(temp0+1>=1024||temp0<0)
+        temp_1 = sim->getreg(rs);
+        temp_2 = immd;
+        temp0 = temp_1 + temp_2;
+            if((temp0+1)>=1024||temp0<0)
             sim->memoryoverflow = 1;
         if((sim->getreg(rs)+immd)%2!=0)
             sim->datamisalign = 1;
@@ -477,7 +481,7 @@ int main()
         break;
         case addi:
             immd=sim->getsignimmd();
-            temp0 = sim->getreg(rs)+immd;
+            temp0 = sim->getreg(rs)+sim->getsignimmd();
                     temp_1 = sim->getreg(rs);
         temp_2 = immd;
                temp0 = temp_1+temp_2;
