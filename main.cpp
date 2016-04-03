@@ -292,7 +292,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==6)
+                if(sim->cycle==94)
             {
                 printf("asd");
             }
@@ -411,7 +411,7 @@ int main()
                 shamt = sim->getshift();
                 sim->setreg(rd , sim->getreg(rt)<<shamt);
                  temp5 = sim->getreg(rt)<<shamt;
-            if (rd == 0&&temp5!=0) {
+            if (rd == 0&&(rt!=0||shamt!=0)) {
            sim->writetozero = 1;
            sim->setreg(rd,0);
             }
@@ -555,7 +555,7 @@ int main()
            sim->writetozero = 1;
            sim->setreg(rt,0);
             }
-        if((sim->getreg(rs)+immd)%4!=0)
+        if((temp_1+immd)%4!=0)
             sim->datamisalign = 1;
         //printf("lw\n");
         break;
