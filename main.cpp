@@ -294,7 +294,7 @@ int main()
      while(1){
     opcode =sim->mapopcode();
     sim->printreg(output);
-                if(sim->cycle==101)
+                if(sim->cycle==23)
             {
                 printf("asd");
             }
@@ -446,6 +446,21 @@ int main()
         case lhu:
         temp5=0;
         temp6=0;
+        temp_1 = sim->getreg(rs);
+        temp_2 = immd;
+        temp0 = temp_1 + temp_2;
+            if((temp0+1)>=1024||temp0<0)
+            {            sim->memoryoverflow = 1;
+                  if (rt == 0) {
+           sim->writetozero = 1;
+           sim->setreg(rt,0);
+                 if((sim->getreg(rs)+immd)%2!=0)
+            sim->datamisalign = 1;
+            sim->numberoverflow=1;
+            break;
+            }
+
+            }
         immd = sim->getsignimmd();
         temp5= sim->getunsigndMemory(sim->getreg(rs)+immd);
         temp6= sim->getunsigndMemory(sim->getreg(rs)+1+immd);
@@ -686,8 +701,13 @@ int main()
                 {
 
                 }
-        if(temp0+3>=1024||temp0<0)
-            sim->memoryoverflow = 1;
+        if( sim->getreg(rs) + immd+3>=1024||temp0<0)
+        {
+                        sim->memoryoverflow = 1;
+                   if((sim->getreg(rs)+immd)%4!=0)
+                        sim->datamisalign = 1;
+            break;
+        }
         sim->setMemory(sim->getreg(rs)+immd , sim->getreg(rt)>> 24);
         sim->setMemory(sim->getreg(rs)+immd +1 , sim->getreg(rt)<< 8 >> 24);
         sim->setMemory(sim->getreg(rs)+immd +2, sim->getreg(rt)<< 16 >> 24);
@@ -726,9 +746,10 @@ int main()
         case sb:
             immd = sim->getsignimmd();
         temp0 =sim->getreg(rs)+immd;
-        if(temp0+1>=1024||temp0<0)
+        if(temp0+1>1024||temp0<0)
             sim->memoryoverflow = 1;
-            sim->setMemory(temp0 , sim->getreg(rt)<<24>>24);
+            temp_1 = sim->getreg(rt)<<24>>24;
+            sim->setMemory(temp0 , temp_1& 0x000000FF);
 
         //printf("sb\n");
         break;
